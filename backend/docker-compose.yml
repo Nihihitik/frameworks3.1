@@ -7,6 +7,21 @@ services:
     environment:
       - DATABASE_URL=postgresql+asyncpg://user:pass@db:5432/app
       - DEBUG=false
+      # NASA APIs
+      - NASA_API_KEY=${NASA_API_KEY}
+      # JWST API
+      - JWST_API_KEY=${JWST_API_KEY}
+      - JWST_EMAIL=${JWST_EMAIL}
+      # Astronomy API
+      - ASTRO_APP_ID=${ASTRO_APP_ID}
+      - ASTRO_APP_SECRET=${ASTRO_APP_SECRET}
+      # Fetch intervals
+      - ISS_FETCH_INTERVAL=${ISS_FETCH_INTERVAL:-120}
+      - APOD_FETCH_INTERVAL=${APOD_FETCH_INTERVAL:-43200}
+      - NEO_FETCH_INTERVAL=${NEO_FETCH_INTERVAL:-7200}
+      - DONKI_FETCH_INTERVAL=${DONKI_FETCH_INTERVAL:-3600}
+      - SPACEX_FETCH_INTERVAL=${SPACEX_FETCH_INTERVAL:-3600}
+      - OSDR_FETCH_INTERVAL=${OSDR_FETCH_INTERVAL:-600}
     depends_on:
       db:
         condition: service_healthy
