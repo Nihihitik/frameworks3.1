@@ -1,0 +1,17 @@
+services:
+  frontend:
+    build: .
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    networks:
+      - frontend-network
+
+networks:
+  frontend-network:
