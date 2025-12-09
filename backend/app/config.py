@@ -42,5 +42,8 @@ class Settings(BaseSettings):
     jwst_url: str = "https://api.jwstapi.com"
     astro_url: str = "https://api.astronomyapi.com/api/v2/bodies/events"
 
+    # OSDR list limit
+    osdr_list_limit: int = 20
+
 
 settings = Settings()
