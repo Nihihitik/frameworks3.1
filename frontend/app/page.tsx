@@ -6,50 +6,73 @@ import { SpeedChart } from "@/components/speed-chart";
 import { AltitudeChart } from "@/components/altitude-chart";
 import { JWSTGallery } from "@/components/jwst-gallery";
 import { AstroEventsTable } from "@/components/astro-events-table";
+import { SpaceDataCards } from "@/components/space-data-cards";
 import { useISSData } from "@/hooks/use-iss-data";
 
 export default function DashboardPage() {
-  const { issData, trendData, loading, error } = useISSData();
+  const { position, history, loading, error } = useISSData();
 
-  // Extract position from payload
-  const position = issData?.payload;
+  // Prepare chart data from history
+  const speedData = history.map((item) => ({
+    time: new Date(item.timestamp).toLocaleTimeString("ru-RU"),
+    velocity: item.velocity,
+  }));
 
-  // We don't have historical data endpoint yet, so use empty arrays
-  const speedData: Array<{ time: string; velocity: number }> = [];
-  const altitudeData: Array<{ time: string; altitude: number }> = [];
-  const trail: [number, number][] = [];
+  const altitudeData = history.map((item) => ({
+    time: new Date(item.timestamp).toLocaleTimeString("ru-RU"),
+    altitude: item.altitude,
+  }));
+
+  // Prepare trail for map
+  const trail: [number, number][] = history.map((item) => [
+    item.latitude,
+    item.longitude,
+  ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-12">
+      {/* Header */}
+      <div className="flex flex-col gap-2">
+        <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl bg-gradient-to-r from-white via-white/80 to-white/40 bg-clip-text text-transparent">
+          Центр управления
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Мониторинг космических объектов в реальном времени
+        </p>
+      </div>
+
       {/* Error Banner */}
       {error && (
-        <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
+        <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive backdrop-blur-sm">
           {error}
         </div>
       )}
 
+      {/* Space Data Cards */}
+      <SpaceDataCards />
+
       {/* Metric Cards Row */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <MetricCard
-          title="ISS Speed"
+          title="Скорость МКС"
           value={position?.velocity?.toFixed(0) ?? "—"}
-          unit="km/h"
+          unit="км/ч"
           id="iss-speed"
         />
         <MetricCard
-          title="ISS Altitude"
+          title="Высота МКС"
           value={position?.altitude?.toFixed(1) ?? "—"}
-          unit="km"
+          unit="км"
           id="iss-altitude"
         />
         <MetricCard
-          title="Latitude"
+          title="Широта"
           value={position?.latitude?.toFixed(4) ?? "—"}
           unit="°"
           id="iss-lat"
         />
         <MetricCard
-          title="Longitude"
+          title="Долгота"
           value={position?.longitude?.toFixed(4) ?? "—"}
           unit="°"
           id="iss-lon"
@@ -60,17 +83,15 @@ export default function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-12">
         {/* Left Column */}
         <div className="space-y-6 lg:col-span-7">
-          {/* JWST Observation Summary */}
-          <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="mb-4 text-lg font-semibold">JWST Observations</h2>
-            <p className="text-muted-foreground">
-              Latest images from James Webb Space Telescope
-            </p>
+          {/* JWST Gallery */}
+          <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-md transition-all hover:bg-white/10">
+            <h2 className="mb-4 text-xl font-semibold tracking-tight">Галерея JWST</h2>
+            <JWSTGallery />
           </div>
 
           {/* Astronomy Events Table */}
-          <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="mb-4 text-lg font-semibold">Astronomy Events</h2>
+          <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-md transition-all hover:bg-white/10">
+            <h2 className="mb-4 text-xl font-semibold tracking-tight">Астрономические события</h2>
             <AstroEventsTable />
           </div>
         </div>
@@ -78,12 +99,13 @@ export default function DashboardPage() {
         {/* Right Column */}
         <div className="space-y-6 lg:col-span-5">
           {/* ISS Map */}
-          <div className="rounded-lg border border-border bg-card p-4">
+          <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-md transition-all hover:bg-white/10">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">ISS Position</h2>
+              <h2 className="text-xl font-semibold tracking-tight">Позиция МКС</h2>
               {loading && (
-                <span className="text-xs text-muted-foreground animate-pulse">
-                  Updating...
+                <span className="flex items-center gap-2 text-xs text-primary animate-pulse">
+                  <span className="h-2 w-2 rounded-full bg-primary" />
+                  Обновление...
                 </span>
               )}
             </div>
@@ -96,24 +118,19 @@ export default function DashboardPage() {
           </div>
 
           {/* Speed Chart */}
-          <div className="rounded-lg border border-border bg-card p-4">
-            <h2 className="mb-4 text-lg font-semibold">Speed Trend</h2>
+          <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-md transition-all hover:bg-white/10">
+            <h2 className="mb-4 text-xl font-semibold tracking-tight">График скорости</h2>
             <SpeedChart data={speedData} />
           </div>
 
           {/* Altitude Chart */}
-          <div className="rounded-lg border border-border bg-card p-4">
-            <h2 className="mb-4 text-lg font-semibold">Altitude Trend</h2>
+          <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-md transition-all hover:bg-white/10">
+            <h2 className="mb-4 text-xl font-semibold tracking-tight">График высоты</h2>
             <AltitudeChart data={altitudeData} />
           </div>
         </div>
       </div>
 
-      {/* JWST Gallery - Full Width */}
-      <div className="rounded-lg border border-border bg-card p-6">
-        <h2 className="mb-4 text-lg font-semibold">JWST Gallery</h2>
-        <JWSTGallery />
-      </div>
     </div>
   );
 }

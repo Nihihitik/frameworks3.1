@@ -35,8 +35,8 @@ export function SpeedChart({ data }: SpeedChartProps) {
         <div className="flex h-full items-center justify-center text-muted-foreground">
           <div className="text-center">
             <div className="mb-2 text-2xl">📈</div>
-            <p className="text-sm">Speed Chart</p>
-            <p className="text-xs">No velocity data available</p>
+            <p className="text-sm">График скорости</p>
+            <p className="text-xs">Ожидание данных...</p>
           </div>
         </div>
       </div>
@@ -47,7 +47,7 @@ export function SpeedChart({ data }: SpeedChartProps) {
     labels: data.map((item) => item.time),
     datasets: [
       {
-        label: "Velocity (km/h)",
+        label: "Скорость (км/ч)",
         data: data.map((item) => item.velocity),
         borderColor: "rgb(59, 130, 246)",
         backgroundColor: "rgba(59, 130, 246, 0.1)",
@@ -67,14 +67,21 @@ export function SpeedChart({ data }: SpeedChartProps) {
       legend: {
         display: true,
         position: "top",
+        labels: { color: "rgba(255, 255, 255, 0.7)" },
       },
       title: {
         display: true,
-        text: "ISS Velocity Over Time",
+        text: "Скорость МКС",
+        color: "rgba(255, 255, 255, 0.9)",
       },
       tooltip: {
         mode: "index",
         intersect: false,
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        titleColor: "#fff",
+        bodyColor: "#ccc",
+        borderColor: "rgba(255, 255, 255, 0.1)",
+        borderWidth: 1,
       },
     },
     scales: {
@@ -82,14 +89,20 @@ export function SpeedChart({ data }: SpeedChartProps) {
         beginAtZero: false,
         title: {
           display: true,
-          text: "Velocity (km/h)",
+          text: "Скорость (км/ч)",
+          color: "rgba(255, 255, 255, 0.7)",
         },
+        grid: { color: "rgba(255, 255, 255, 0.1)" },
+        ticks: { color: "rgba(255, 255, 255, 0.5)" },
       },
       x: {
         title: {
           display: true,
-          text: "Time",
+          text: "Время",
+          color: "rgba(255, 255, 255, 0.7)",
         },
+        grid: { color: "rgba(255, 255, 255, 0.1)" },
+        ticks: { color: "rgba(255, 255, 255, 0.5)" },
       },
     },
     interaction: {
@@ -100,7 +113,7 @@ export function SpeedChart({ data }: SpeedChartProps) {
   };
 
   return (
-    <div className="relative h-48 w-full overflow-hidden rounded-md bg-background p-4">
+    <div className="relative h-64 w-full overflow-hidden rounded-md bg-transparent p-2">
       <Line data={chartData} options={options} />
     </div>
   );

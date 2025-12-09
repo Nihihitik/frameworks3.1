@@ -117,13 +117,31 @@ export type SpaceCacheItem = {
 };
 
 export type SpaceSummaryResponse = {
-  apod: SpaceCacheItem | null;
-  neo: SpaceCacheItem[];
-  flr: SpaceCacheItem[];
-  cme: SpaceCacheItem[];
-  spacex: SpaceCacheItem[];
-  iss: ISSResponse | null;
-  osdr_count: number;
+  apod?: {
+    at?: string;
+    payload?: APODData;
+  };
+  neo?: {
+    at?: string;
+    payload?: {
+      element_count?: number;
+      near_earth_objects?: Record<string, NEOData[]>;
+    };
+  };
+  flr?: {
+    at?: string;
+    payload?: FLRData[];
+  };
+  cme?: {
+    at?: string;
+    payload?: CMEData[];
+  };
+  spacex?: {
+    at?: string;
+    payload?: SpaceXData;
+  };
+  iss?: ISSResponse | null;
+  osdr_count?: number;
 };
 
 // JWST Types

@@ -8,7 +8,7 @@ const ISSMapClient = dynamic(() => import("./iss-map-client"), {
     <div className="flex h-full min-h-[400px] w-full animate-pulse items-center justify-center rounded-md bg-muted">
       <div className="text-center text-muted-foreground">
         <div className="mb-2 text-4xl">🛰️</div>
-        <p className="text-sm">Loading map...</p>
+        <p className="text-sm">Загрузка карты...</p>
       </div>
     </div>
   ),
@@ -33,8 +33,8 @@ export function ISSMap({ latitude, longitude, altitude, trail }: ISSMapProps) {
         <div className="flex h-full items-center justify-center text-muted-foreground">
           <div className="text-center">
             <div className="mb-2 text-4xl">🛰️</div>
-            <p className="text-sm">ISS Map</p>
-            <p className="text-xs">Waiting for position data...</p>
+            <p className="text-sm">Карта МКС</p>
+            <p className="text-xs">Ожидание данных о позиции...</p>
           </div>
         </div>
       </div>

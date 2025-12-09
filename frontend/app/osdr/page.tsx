@@ -3,8 +3,16 @@
 import { useEffect, useState } from "react";
 import { useOSDRData } from "@/hooks/use-osdr-data";
 
+type ParsedDataset = {
+  id: string;
+  url: string;
+};
+
+const PAGE_SIZE = 25;
+
 export default function OSDRPage() {
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const { items, loading, error, refetch, sync } = useOSDRData();
 
   useEffect(() => {
@@ -16,87 +24,121 @@ export default function OSDRPage() {
     refetch();
   };
 
+  // Parse raw data to extract individual datasets (deduplicated)
+  const parseDatasets = (): ParsedDataset[] => {
+    if (!items?.items || items.items.length === 0) return [];
+
+    const datasetMap = new Map<string, string>();
+
+    for (const item of items.items) {
+      if (item.raw && typeof item.raw === "object") {
+        for (const [key, value] of Object.entries(item.raw)) {
+          if (key.startsWith("OSD-") && typeof value === "object" && value !== null) {
+            const data = value as { REST_URL?: string };
+            // Only add if not already in map (deduplication)
+            if (!datasetMap.has(key)) {
+              datasetMap.set(key, data.REST_URL || "");
+            }
+          }
+        }
+      }
+    }
+
+    // Convert to array and sort by OSD number
+    const datasets: ParsedDataset[] = Array.from(datasetMap.entries()).map(
+      ([id, url]) => ({ id, url })
+    );
+
+    return datasets.sort((a, b) => {
+      const numA = Number.parseInt(a.id.replace("OSD-", ""), 10);
+      const numB = Number.parseInt(b.id.replace("OSD-", ""), 10);
+      return numA - numB;
+    });
+  };
+
+  const allDatasets = parseDatasets();
+  const datasets = allDatasets.slice(0, visibleCount);
+  const hasMore = visibleCount < allDatasets.length;
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + PAGE_SIZE);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">NASA OSDR</h1>
+        <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">NASA OSDR</h1>
         <button
           type="button"
           onClick={handleSync}
           disabled={loading}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          className="rounded-full bg-primary px-6 py-2 text-sm font-medium text-primary-foreground shadow-[0_0_15px_-5px_var(--color-primary)] transition-all hover:bg-primary/90 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
         >
-          {loading ? "Syncing..." : "Sync Data"}
+          {loading ? "Синхронизация..." : "Синхронизировать"}
         </button>
       </div>
 
       <p className="text-muted-foreground">
-        Open Science Data Repository — NASA&apos;s collection of space biology
-        datasets
+        Open Science Data Repository — коллекция космических биологических
+        данных NASA
       </p>
 
       {/* Error Banner */}
       {error && (
-        <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
+        <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive backdrop-blur-sm">
           {error}
         </div>
       )}
 
       {/* Loading State */}
-      {loading && !items && (
+      {loading && datasets.length === 0 && (
         <div className="flex h-32 items-center justify-center">
-          <div className="text-center text-muted-foreground animate-pulse">
-            Loading datasets...
+          <div className="text-center text-primary animate-pulse">
+            Загрузка данных...
           </div>
         </div>
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-lg border border-border">
+      <div className="overflow-x-auto rounded-xl border border-white/10 bg-white/5 backdrop-blur-md">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50">
+          <thead className="bg-white/10">
             <tr>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                #
+                №
               </th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                Dataset ID
+                ID датасета
               </th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                Title
+                Ссылка на API
               </th>
               <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                Status
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                Updated
-              </th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                Actions
+                Действия
               </th>
             </tr>
           </thead>
           <tbody>
-            {!items || items.length === 0 ? (
+            {datasets.length === 0 ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={4}
                   className="px-4 py-8 text-center text-muted-foreground"
                 >
                   {loading
-                    ? "Loading..."
-                    : 'No datasets loaded. Click "Sync Data" to fetch from OSDR.'}
+                    ? "Загрузка..."
+                    : 'Нет данных. Нажмите "Синхронизировать" для загрузки из OSDR.'}
                 </td>
               </tr>
             ) : (
-              items.map((item, index) => (
-                <TableRow
-                  key={item.id}
-                  item={item}
+              datasets.map((dataset, index) => (
+                <DatasetRow
+                  key={dataset.id}
+                  dataset={dataset}
                   index={index}
-                  expanded={expandedId === item.id}
+                  expanded={expandedId === dataset.id}
                   onToggle={() =>
-                    setExpandedId(expandedId === item.id ? null : item.id)
+                    setExpandedId(expandedId === dataset.id ? null : dataset.id)
                   }
                 />
               ))
@@ -105,86 +147,114 @@ export default function OSDRPage() {
         </table>
       </div>
 
-      {/* Count */}
-      {items && items.length > 0 && (
-        <p className="text-xs text-muted-foreground">
-          Showing {items.length} datasets
-        </p>
+      {/* Count and Load More */}
+      {datasets.length > 0 && (
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            Показано {datasets.length} из {allDatasets.length} датасетов
+          </p>
+          {hasMore && (
+            <button
+              type="button"
+              onClick={handleLoadMore}
+              className="rounded-full border border-white/10 bg-white/5 px-6 py-2 text-sm font-medium hover:bg-white/10 transition-all"
+            >
+              Загрузить ещё {PAGE_SIZE}
+            </button>
+          )}
+        </div>
       )}
 
-      {/* API Info */}
-      <div className="rounded-lg border border-border bg-muted/50 p-4">
-        <h3 className="mb-2 text-sm font-medium">API Endpoints</h3>
-        <ul className="space-y-1 text-sm text-muted-foreground">
-          <li>
-            <code className="rounded bg-muted px-1">GET /osdr/sync</code> —
-            Trigger sync
-          </li>
-          <li>
-            <code className="rounded bg-muted px-1">GET /osdr/list</code> — List
-            datasets (paginated)
-          </li>
-        </ul>
-      </div>
     </div>
   );
 }
 
-type OSDRItem = {
-  id: number;
-  dataset_id?: string;
-  title?: string;
-  status?: string;
-  updated_at?: string;
-  inserted_at: string;
-  raw: Record<string, unknown>;
-};
-
-function TableRow({
-  item,
+function DatasetRow({
+  dataset,
   index,
   expanded,
   onToggle,
 }: {
-  item: OSDRItem;
+  dataset: ParsedDataset;
   index: number;
   expanded: boolean;
   onToggle: () => void;
 }) {
   return (
     <>
-      <tr className="border-t border-border hover:bg-muted/30">
+      <tr className="border-t border-white/5 hover:bg-white/5 transition-colors">
         <td className="px-4 py-3">{index + 1}</td>
-        <td className="px-4 py-3 font-mono text-xs">
-          {item.dataset_id ?? "—"}
+        <td className="px-4 py-3 font-mono text-sm font-medium">
+          {dataset.id}
         </td>
-        <td className="px-4 py-3">{item.title ?? "Untitled"}</td>
         <td className="px-4 py-3">
-          <span className="rounded-full bg-green-100 px-2 py-1 text-xs text-green-800 dark:bg-green-900 dark:text-green-200">
-            {item.status ?? "unknown"}
-          </span>
-        </td>
-        <td className="px-4 py-3 text-xs text-muted-foreground">
-          {item.updated_at
-            ? new Date(item.updated_at).toLocaleDateString()
-            : "—"}
+          {dataset.url ? (
+            <a
+              href={dataset.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline truncate block max-w-md transition-colors"
+            >
+              {dataset.url}
+            </a>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )}
         </td>
         <td className="px-4 py-3">
           <button
             type="button"
             onClick={onToggle}
-            className="text-primary hover:underline"
+            className="text-primary hover:underline text-sm transition-colors"
           >
-            {expanded ? "Hide" : "Show"} JSON
+            {expanded ? "Скрыть" : "Подробнее"}
           </button>
         </td>
       </tr>
       {expanded && (
         <tr>
-          <td colSpan={6} className="bg-muted/30 px-4 py-3">
-            <pre className="max-h-64 overflow-auto rounded bg-muted p-3 text-xs">
-              {JSON.stringify(item.raw, null, 2)}
-            </pre>
+          <td colSpan={4} className="bg-white/5 px-4 py-4">
+            <div className="space-y-3">
+              <div>
+                <span className="text-sm font-medium">ID датасета: </span>
+                <span className="font-mono">{dataset.id}</span>
+              </div>
+              <div>
+                <span className="text-sm font-medium">REST API: </span>
+                {dataset.url ? (
+                  <a
+                    href={dataset.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline break-all"
+                  >
+                    {dataset.url}
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground">Недоступно</span>
+                )}
+              </div>
+              {dataset.url && (
+                <div className="flex gap-2">
+                  <a
+                    href={dataset.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                  >
+                    Открыть в API
+                  </a>
+                  <a
+                    href={`https://visualization.osdr.nasa.gov/biodata/datasets/${dataset.id.replace("OSD-", "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-medium hover:bg-white/10 transition-colors"
+                  >
+                    Открыть на сайте NASA
+                  </a>
+                </div>
+              )}
+            </div>
           </td>
         </tr>
       )}
