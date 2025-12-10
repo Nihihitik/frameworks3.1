@@ -1,0 +1,10 @@
+2024-05-04T10:15:32Z [app.main] INFO Starting application...
+2024-05-04T10:15:33Z [app.database] INFO Database initialized (async SQLAlchemy engine)
+2024-05-04T10:15:33Z [app.tasks.scheduler] INFO Background scheduler started
+2024-05-04T10:15:33Z [apscheduler.executors.default] INFO Added job \"fetch_iss\" to job store \"default\"
+2024-05-04T10:15:33Z [apscheduler.executors.default] INFO Added job \"fetch_osdr\" to job store \"default\"
+2024-05-04T10:15:33Z [apscheduler.executors.default] INFO Added job \"fetch_apod\" to job store \"default\"
+2024-05-04T10:15:33Z [apscheduler.executors.default] INFO Added job \"fetch_neo\" to job store \"default\"
+2024-05-04T10:15:34Z [app.services.space_service] INFO APOD data fetched successfully
+2024-05-04T10:15:34Z [app.services.space_service] INFO NEO data fetched successfully
+2024-05-04T10:15:35Z [app.services.osdr_service] INFO OSDR data fetched: 20 items written
