@@ -81,14 +81,6 @@ async def fetch_neo(self) -> None:
 - **SQL-инъекции / N+1**: репозитории опираются на SQLAlchemy и параметризованные запросы; OSDR upsert исключает «слепые» INSERT.
 - **XSS/CSRF**: React/Next экранирует данные, внешние ссылки используют `rel="noopener noreferrer"`; mutating операций в UI нет.
 
-## Скриншоты, код и логи
-
-| Тип | Материал |
-| --- | --- |
-| UI | ![Dashboard](docs/screenshots/dashboard.png) ![OSDR](docs/screenshots/osdr.png) |
-| Код | Фрагмент `SpaceService` выше + дополнительные выдержки в `project/backend/app/services/iss_service.py`, `project/frontend/hooks/use-iss-data.ts` |
-| Логи | `docs/logs/backend-startup.log` — стандартный вывод после `docker compose up` |
-
 ## Выводы и рекомендации
 
 1. **Единый API слой** (см. [git](https://github.com/Nihihitik/frameworks3.1/tree/375072d026e21bc926df0b4b7c5c0d6e1dd2b75b/project/backend/app)) дал возможность тестировать и деплоить один сервис вместо трёх — это самое ощутимое улучшение.
